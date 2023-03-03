@@ -86,3 +86,47 @@ from .models import Movie
 # Register your models here.
 admin.site.register(Movie)
 ```
+4) We are now able to add new movies from the admin panel.
+
+# Creating JSON Response with vanilla Django.
+
+In order to understand why DRF is so usefull , let's first start by serving our movie data with the built-in logic that Django provides. Later , we can see how DRF will build and improve on that-
+
+1) We will create a view in our ```views.py``` to return a list of the movies we have in our DB , this is what it looks like with "vanilla" Django:
+```
+from .models import Movie
+from django.http import JsonResponse
+
+def movie_list(request):
+    # The next line will fetch all the movies from DB and store them in a queryset
+    movies = Movie.objects.all()
+    
+    # Because we cannot send the response as a querset, we need to transform the queryset.
+    data = {
+        # Using .values() we get the values each object of the queryset as a dictionarie.
+        # And then wrapping the queryset in a list to transform it into a list of dictionaries.
+        'movies': list(movies.values())
+    }
+    
+    #Finally we return our data dictionary as JSON object.
+    return JsonResponse(data, status=200)
+```
+
+2) Now , let's see what it would look like with returning only a single movie of our choice:
+```
+def movie_detail(request, movie_id):
+    # Filter the movie by movie id
+    movie = Movie.objects.get(pk=movie_id)
+
+    # Convert the movie object into a dictionary from queryset format
+    data = {
+        'name': movie.name,
+        'description': movie.description,
+        'active': movie.active
+    }
+    
+    #Return our data dictionary as JSON object.
+    return JsonResponse(data, status=200)
+```
+
+So, as you can see, most of our work is to transform the queryset we receive from Django ORM to a JSON object that the user will receive ! What if there was an easier way to do this ? There is... that's why we will use DRF instead.
