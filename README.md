@@ -40,7 +40,7 @@ This repo will cover the following topics and concepts about Django and , specif
 
 # What we will build ?
 
-In order to cover all those topics , we will build an API that will serve movie data , like an IMDV or WatchMate clone.
+In order to cover all those topics , we will build an API that will serve movie data , like an IMDB or WatchMate clone.
 
 # Installation
 
@@ -310,3 +310,10 @@ def movie_detail(request, movie_id):
         movie.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 ```
+# Status codes
+
+You might have noticed in the examples above, that I have imported ```status``` from ```rest_framework```.
+
+```status``` simply provides an easier and more readable way to write http codes. If you want to look more into in , follow <a href="https://www.django-rest-framework.org/api-guide/status-codes/">this link</a>.
+
+It provides all the available codes and what they mean.
