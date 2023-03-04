@@ -325,7 +325,7 @@ DRF has 2 types of views :
 - Function Based View (we used above with ```@api_view()```)
 - Class Based Views (there are different types of class Based Views)
 
-We'll start with ```APIView``` , importing it from ```rest_framework.views```.
+We have already seen a function base view approach, now we'll start with a class based view: ```APIView``` , importing it from ```rest_framework.views```.
 
 With ```APIView``` , the incoming request is dispatched to an appropriate handler method such as .get() or .post().
 
