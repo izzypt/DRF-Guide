@@ -378,10 +378,14 @@ So , as you can see we reused the entire logic, we just save some time but not h
 
 # Serializers Validation
 
-In our serializers, we are able to add some validation. There are 3 different types of validation we can add on our serializers:
-- field level validation
-- object level validation
+Serializers validation is used to validate the data submitted in a request. The purpose of a validator is to ensure that the data submitted in a request is valid and meets certain requirements or constraints before it is processed further.
+
+There are 3 different types of validation we can add on our serializers:
+- Field level validation
+- Object level validation
 - Validators
+
+Let's take a look at each one...
 
 ## Field Level Validation
 
@@ -407,6 +411,21 @@ class BlogPostSerializer(serializers.Serializer):
         return value
 ```
 
+So, if we wanted to add some level validation to our ```MovieSerializer```, let's say the name , we would do something like this :
+
+```
+class MovieSerializer(serializers.Serializer):
+    id = serializers.IntegerField(read_only=True)
+    name = serializers.CharField()
+    description = serializers.CharField()
+    active = serializers.BooleanField()
+    
+    def validate_name(self, value):
+        if len(value) < 3:
+            raise serializers.ValidationError("Name must be at least 3 characters long")
+        return value
+```
+
 ## Object Level Validation
 
 With object level validation , we are able to check multiple fields at once. According to the documentation :
@@ -428,4 +447,36 @@ class EventSerializer(serializers.Serializer):
         if data['start'] > data['finish']:
             raise serializers.ValidationError("finish must occur after start")
         return data
+```
+
+So, if we wanted to add some Object level Validation to our ```MovieSerializer```, it would look something like this:
+
+```
+class MovieSerializer(serializers.Serializer):
+    id = serializers.IntegerField(read_only=True)
+    name = serializers.CharField()
+    description = serializers.CharField()
+    active = serializers.BooleanField()
+    
+    def validate(self, data):
+        if data["name"] == data["description"]:
+            raise serializers.ValidationError("Title and description should be different")
+        else:
+            return data
+```
+
+## Validators
+
+Official documentation says about validators :
+
+> Individual fields on a serializer can include validators, by declaring them on the field instance, for example:
+```
+def multiple_of_ten(value):
+    if value % 10 != 0:
+        raise serializers.ValidationError('Not a multiple of ten')
+
+class GameRecord(serializers.Serializer):
+    score = IntegerField(validators=[multiple_of_ten])
+    ...
+
 ```
