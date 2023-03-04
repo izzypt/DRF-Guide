@@ -375,3 +375,57 @@ class MovieDetail(APIView):
 ```
 
 So , as you can see we reused the entire logic, we just save some time but not haveing to identify the request method or the acceptable methods, since the class automatically does it for us.
+
+# Serializers Validation
+
+In our serializers, we are able to add some validation. There are 3 different types of validation we can add on our serializers:
+- field level validation
+- object level validation
+- Validators
+
+## Field Level Validation
+
+Field level validation consists on checking only a particular field of our serializers. According to the documentation:
+
+> You can specify custom field-level validation by adding validate_<field_name> methods to your Serializer subclass.
+
+Docs example :
+
+```
+from rest_framework import serializers
+
+class BlogPostSerializer(serializers.Serializer):
+    title = serializers.CharField(max_length=100)
+    content = serializers.CharField()
+
+    def validate_title(self, value):
+        """
+        Check that the blog post is about Django.
+        """
+        if 'django' not in value.lower():
+            raise serializers.ValidationError("Blog post is not about Django")
+        return value
+```
+
+## Object Level Validation
+
+With object level validation , we are able to check multiple fields at once. According to the documentation :
+
+> To do any other validation that requires access to multiple fields, add a method called ```validate()``` to your Serializer subclass. This method takes a single argument, which is a dictionary of field values. It should raise a serializers.ValidationError if necessary, or just return the validated values. For example:
+
+```
+from rest_framework import serializers
+
+class EventSerializer(serializers.Serializer):
+    description = serializers.CharField(max_length=100)
+    start = serializers.DateTimeField()
+    finish = serializers.DateTimeField()
+
+    def validate(self, data):
+        """
+        Check that start is before finish.
+        """
+        if data['start'] > data['finish']:
+            raise serializers.ValidationError("finish must occur after start")
+        return data
+```
