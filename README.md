@@ -317,3 +317,61 @@ You might have noticed in the examples above, that I have imported ```status``` 
 ```status``` simply provides an easier and more readable way to write http codes. If you want to look more into in , follow <a href="https://www.django-rest-framework.org/api-guide/status-codes/">this link</a>.
 
 It provides all the available codes and what they mean.
+
+# APIView Class
+
+DRF has 2 types of views :
+
+- Function Based View (we used above with ```@api_view()```)
+- Class Based Views (there are different types of class Based Views)
+
+We'll start with ```APIView``` , importing it from ```rest_framework.views```.
+
+With ```APIView``` , the incoming request is dispatched to an appropriate handler method such as .get() or .post().
+
+Refactoring our previous code :
+
+```
+from watchlist.models import Movie
+from watchlist.api.serializers import MovieSerializer
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from rest_framework import status
+
+class MovieList(APIView):
+    def get(self, request, format=None):
+        movies = Movie.objects.all()
+        serializer = MovieSerializer(movies, many=True)
+        return Response(serializer.data)
+
+    
+    def post(self, request, format=None):
+        serializer = MovieSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+class MovieDetail(APIView):
+    def get(self, request, pk):
+        movie = Movie.objects.get(pk=pk)
+        serializer = MovieSerializer(movie)
+        return Response(serializer.data)
+    
+    def put(self, request, pk):
+        movie = Movie.objects.get(pk=pk)
+        serializer = MovieSerializer(movie, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    def delete(self, request, pk):
+        movie = Movie.objects.get(pk=pk)
+        movie.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+```
+
+So , as you can see we reused the entire logic, we just save some time but not haveing to identify the request method or the acceptable methods, since the class automatically does it for us.
