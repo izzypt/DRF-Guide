@@ -480,3 +480,86 @@ class GameRecord(serializers.Serializer):
     ...
 
 ```
+
+# Serializer fields Core Arguments
+
+Each field in a serializer can take several core arguments that further define or constraint the data that the field can receive. For example :
+
+```
+from rest_framework import serializers
+from myapp.models import MyModel
+
+class MySerializer(serializers.Serializer):
+    my_field = serializers.CharField(
+        source='my_model_field', 
+        max_length=100, 
+        required=True, 
+        help_text='Enter a value for my_field'
+    )
+
+    def create(self, validated_data):
+        return MyModel.objects.create(**validated_data)
+
+    def update(self, instance, validated_data):
+        instance.my_model_field = validated_data.get('my_field', instance.my_model_field)
+        instance.save()
+        return instance
+```
+
+Some of the most common core arguments for a serializer field , include :
+
+- source 
+> Specifies the attribute or method on the model instance that should be used to populate the field. For example, source='my_model_field' would map the field to the my_model_field attribute on the model.
+
+- read_only 
+> Specifies whether the field is read-only or not. If set to True, the field cannot be updated via the serializer.
+
+- write_only 
+> Specifies whether the field is write-only or not. If set to True, the field cannot be retrieved via the serializer.
+
+- required 
+> Specifies whether the field is required or not. If set to True, the field must be included in the input data.
+
+- allow_null 
+> Specifies whether the field can be set to None or not.
+
+- default 
+> Specifies the default value for the field if no value is provided in the input data.
+
+- validators 
+> Specifies a list of validator functions to apply to the field value.
+
+- error_messages 
+> Specifies a dictionary of error messages to use for different types of validation errors.
+
+- help_text
+>  Specifies help text for the field that can be displayed in the API documentation.
+
+- label
+>  Specifies a human-readable label for the field that can be displayed in the API documentation.
+
+<a href="https://www.django-rest-framework.org/api-guide/fields/#core-arguments">Click here to check the official docs on serializer field core arguments.</a>
+
+# Model Serializer
+
+As stated above, there are other ways to write Serializers. One of them is extending ```serializer.ModelSerializer```.
+
+```ModelSerializer``` is just like a regular ```Serializer```, except some work is already done for us, like :
+- A set of default fields are automatically populated
+- A set of default validators are automatically populated
+- Default ```create()``` and ```update()``` implementations are already provided.
+
+If the ModelSerializer doesn't generate the set of fields we need, we should declare the field explicitly on the class, or simply use a ```Serializer``` class.
+
+
+So, if we want to implement ```ModelSerializer``` into our pre-existing code, we refactor the ```MovieSerializer``` to :
+
+```
+from rest_framework import serializers
+from watchlist.models import Movie
+
+class MovieSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Movie
+        fields = "__all__"
+```
