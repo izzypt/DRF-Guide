@@ -562,4 +562,25 @@ class MovieSerializer(serializers.ModelSerializer):
     class Meta:
         model = Movie
         fields = "__all__"
+     
+class MovieSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Movie
+        fields = "__all__"
+        
+    # Field level validation
+    def validate_name(self, value):
+        if len(value) < 3:
+            raise serializers.ValidationError("Name must be at least 3 characters long")
+        else:
+            return value
+
+    # Object level validation
+    def validate(self, data):
+        if data["name"] == data["description"]:
+            raise serializers.ValidationError("Title and description should be different")
+        else:
+            return data
 ```
+
+So, as you can see , we didn't have to specify ```create()``` or ```update()``` and we didn't need to specify the serializer fields, since ModelSerializer is getting those from the model.
