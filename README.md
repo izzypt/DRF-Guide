@@ -579,3 +579,36 @@ class MovieSerializer(serializers.ModelSerializer):
 ```
 
 So, as you can see , we didn't have to specify ```create()``` or ```update()``` and we didn't need to specify the serializer fields, since ModelSerializer is getting those from the model.
+
+In order to change the fields that you want your serializer to send back , there are 2 ways you can do it:
+
+1) By specifying which fields you want in a field list , something like : ```fields = ['id', 'name', 'description']```
+2) By defining the fields you want to exclude , adding this field to your class ```Meta``` : ```exclude = ["active"]```
+
+# Custom Serializer Fields
+
+If we want to send back some field in our serializer that requires some type of calculation or that does not exist in our models.
+
+Let's say we wanted to send back the length of the movie name. We can achieve that result by declaring a new type of field, a ```serializers.MethodField```.
+
+This is the official docs description:
+
+> SerializerMethodField is a read-only field. It gets its value by calling a method on the serializer class it is attached to. It can be used to add any sort of data to the serialized representation of your object.
+
+Example : 
+
+```
+class MovieSerializer(serializers.ModelSerializer):
+    len_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Movie
+        exclude = ["active"]
+    
+    def get_len_name(self, obj):
+        return len(obj.name)
+```
+
+So, basically there are 2 important steps to create a ```SerializerMethodField()```
+- Declare the field and the name as we did with ```len_name = serializers.SerializerMethodField()``` inside your serializer.
+- Define the mthod that will return the value for that field. It is important to name the method following the style : ```get_<method_field_name>```
