@@ -647,3 +647,42 @@ It is important to know the most basic relationships we can establish between Dj
 - Many to Many
 
 <a href="https://docs.djangoproject.com/en/3.1/topics/db/examples/">Click here to check Django documentation</a>
+
+Let's also add a relationship to our current ```WatchList``` model :
+
+```
+
+class WatchList(models.Model):
+    (...)
+    platform = models.ForeignKey(StreamPlatorm, on_delete=models.CASCADE, related_name="watchlist")
+    (...)
+        
+```
+
+Above we create a ```many-to-one``` relationship between WatchList and StreamPlatform, which means that each WatchList instance can be associated with only one StreamPlatform instance, but each StreamPlatform instance can be associated with many WatchList instances.
+
+Now an explanation on what each parameter of the field means:
+
+- ```StreamPlatform```: This is the model that the platform field is referring to.
+
+- ```on_delete=models.CASCADE```: This parameter specifies what should happen to the WatchList instances if the StreamPlatform instance they are associated with is deleted. In this case, CASCADE means that if a StreamPlatform instance is deleted, all WatchList instances associated with it will also be deleted.
+
+- ```related_name="watchlist"```: This parameter specifies the name of the reverse relation from StreamPlatform to WatchList. This means that each StreamPlatform instance will have a reverse relation to all associated WatchList instances, and the name of this relation will be "watchlist".
+
+>Each WatchList instance represents a single movie or TV show, and each WatchList instance is associated with one StreamPlatform instance that represents the platform where that movie or TV show can be streamed. Multiple WatchList instances can be associated with the same StreamPlatform instance, because multiple movies or TV shows can be available on the same streaming platform.
+
+# Nested Serializers
+
+Our goal for this section is to have a field in our serializers  ```StreamPlatformSerializer``` which displays all of the linked ```watchlist```'s for that platform.
+
+We will do this by adding the following line to our ```StreamPlatformSerializer```:
+```
+class StreamPlatformSerializer(serializers.ModelSerializer):
+    watchlist = WatchListSerializer(many=True, read_only=True)
+    
+    class Meta:
+        model = StreamPlatorm
+        fields = "__all__"
+```
+
+> Important note to keep is that the field name matches the ```related_name``` we defined in the ```WatchList``` model, because we are doing a reverse relation from StreamPlatform to WatchList.
