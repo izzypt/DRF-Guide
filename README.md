@@ -712,7 +712,31 @@ AccountSerializer():
     name = CharField(allow_blank=True, max_length=100, required=False)
     owner = PrimaryKeyRelatedField(queryset=User.objects.all())
 ```
+### <ins>Example Models</ins>
+  Let's take the models and examples from the official docs :
 
+```
+class Album(models.Model):
+    album_name = models.CharField(max_length=100)
+    artist = models.CharField(max_length=100)
+
+class Track(models.Model):
+    album = models.ForeignKey(Album, related_name='tracks', on_delete=models.CASCADE)
+    order = models.IntegerField()
+    title = models.CharField(max_length=100)
+    duration = models.IntegerField()
+
+    class Meta:
+        unique_together = ['album', 'order']
+        ordering = ['order']
+        
+    def __str__(self):
+        return '%d: %s' % (self.order, self.title)
+```
+
+The ```unique_together``` field in Django's Meta class specifies that certain fields in a model should be unique together, meaning that the combination of values for those fields must be unique in the database.
+
+Additionally, the ordering field in the Meta class specifies the default ordering for the Track model. In this case, it is set to order the tracks by their order field.
 
 ### <ins>StringRelatedField</ins>
 
