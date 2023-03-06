@@ -612,3 +612,28 @@ class MovieSerializer(serializers.ModelSerializer):
 So, basically there are 2 important steps to create a ```SerializerMethodField()```
 - Declare the field and the name as we did with ```len_name = serializers.SerializerMethodField()``` inside your serializer.
 - Define the mthod that will return the value for that field. It is important to name the method following the style : ```get_<method_field_name>```
+
+# Updating Models
+
+In order to progress with our IMDB clone and touch on other topics , we need to change our models and create new ones. Let's work with those models from now on:
+
+```
+class StreamPlatorm(models.Model):
+    name = models.CharField(max_length=100)
+    about = models.CharField(max_length=100)
+    website = models.URLField(max_length=100)
+    
+    def __str__(self):
+        return self.name
+        
+class WatchList(models.Model):
+    title = models.CharField(max_length=150)
+    storyline = models.CharField(max_length=150)
+    active = models.BooleanField(default=True)
+    created = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return self.title
+```
+
+I have also refactored the code to change from "Movie" to watchlist and added views and serializers for the new model ```StreamPlatform```
