@@ -686,3 +686,151 @@ class StreamPlatformSerializer(serializers.ModelSerializer):
 ```
 
 > Important note to keep is that the field name matches the ```related_name``` we defined in the ```WatchList``` model, because we are doing a reverse relation from StreamPlatform to WatchList.
+
+In the current start, our ```watchlist``` field returns the entire watchlist object, just like it would return a normal a watchlist instance from the ```WatchListSerializer```. But what if we want to customize that return of ```watchlist``` ?
+
+Well, instead of using ```WatchListSerializer``` as a return to our watchlist, we can use Relational fields, which I will discuss in the next section...
+
+# Serializer Relations
+
+<i>Documentation official description:</i>
+
+> Relational fields are used to represent model relationships. They can be applied to ForeignKey, ManyToManyField and OneToOneField relationships, as well as to reverse relationships, and custom relationships such as GenericForeignKey.
+
+### <ins>Inspecting Relationships</ins>
+
+When using the ModelSerializer class, serializer fields and relationships will be automatically generated for you. Inspecting these automatically generated fields can be a useful tool for determining how to customize the relationship style.
+
+To do so, open the Django shell, using python manage.py shell, then import the serializer class, instantiate it, and print the object representation…
+
+```
+>>> from myapp.serializers import AccountSerializer
+>>> serializer = AccountSerializer()
+>>> print(repr(serializer))
+AccountSerializer():
+    id = IntegerField(label='ID', read_only=True)
+    name = CharField(allow_blank=True, max_length=100, required=False)
+    owner = PrimaryKeyRelatedField(queryset=User.objects.all())
+```
+
+
+### <ins>StringRelatedField</ins>
+
+> ```StringRelatedField``` may be used to represent the target of the relationship using its __str__ method.
+
+For example, the following serializer:
+
+```
+class AlbumSerializer(serializers.ModelSerializer):
+    tracks = serializers.StringRelatedField(many=True)
+
+    class Meta:
+        model = Album
+        fields = ['album_name', 'artist', 'tracks']
+```
+
+Would serialize to the following representation:
+
+```
+{
+    'album_name': 'Things We Lost In The Fire',
+    'artist': 'Low',
+    'tracks': [
+        '1: Sunflower',
+        '2: Whitetail',
+        '3: Dinosaur Act',
+        ...
+    ]
+}
+```
+
+This field is read only.
+
+<b>Arguments</b>:
+
+- many - If applied to a to-many relationship, you should set this argument to True.
+
+### <ins>PrimaryKeyRelatedField</ins>
+
+> ```PrimaryKeyRelatedField``` may be used to represent the target of the relationship using its primary key.
+
+For example, the following serializer:
+
+```
+class AlbumSerializer(serializers.ModelSerializer):
+    tracks = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
+
+    class Meta:
+        model = Album
+        fields = ['album_name', 'artist', 'tracks']
+```
+
+Would serialize to a representation like this:
+
+```
+{
+    'album_name': 'Undun',
+    'artist': 'The Roots',
+    'tracks': [
+        89,
+        90,
+        91,
+        ...
+    ]
+}
+```
+
+By default this field is read-write, although you can change this behavior using the read_only flag.
+
+<b>Arguments</b>:
+
+- queryset - The queryset used for model instance lookups when validating the field input. Relationships must either set a queryset explicitly, or set read_only=True.
+- many - If applied to a to-many relationship, you should set this argument to True.
+- allow_null - If set to True, the field will accept values of None or the empty string for nullable relationships. Defaults to False.
+- pk_field - Set to a field to control serialization/deserialization of the primary key's value. For example, pk_field=UUIDField(format='hex') would serialize a UUID primary key into its compact hex representation.
+
+
+### <ins>SlugRelatedField</ins>
+
+> ```SlugRelatedField``` may be used to represent the target of the relationship using a field on the target.
+
+For example, the following serializer:
+
+```
+class AlbumSerializer(serializers.ModelSerializer):
+    tracks = serializers.SlugRelatedField(
+        many=True,
+        read_only=True,
+        slug_field='title'
+     )
+
+    class Meta:
+        model = Album
+        fields = ['album_name', 'artist', 'tracks']
+```
+
+Would serialize to a representation like this:
+
+```
+{
+    'album_name': 'Dear John',
+    'artist': 'Loney Dear',
+    'tracks': [
+        'Airport Surroundings',
+        'Everything Turns to You',
+        'I Was Only Going Out',
+        ...
+    ]
+}
+```
+
+By default this field is read-write, although you can change this behavior using the read_only flag.
+
+When using SlugRelatedField as a read-write field, you will normally want to ensure that the slug field corresponds to a model field with unique=True.
+
+<b>Arguments</b>:
+
+- slug_field - The field on the target that should be used to represent it. This should be a field that uniquely identifies any given instance. For example, username. required
+- queryset - The queryset used for model instance lookups when validating the field input. Relationships must either set a queryset explicitly, or set read_only=True.
+- many - If applied to a to-many relationship, you should set this argument to True.
+- allow_null - If set to True, the field will accept values of None or the empty string for nullable relationships. Defaults to False.
