@@ -637,3 +637,13 @@ class WatchList(models.Model):
 ```
 
 I have also refactored the code to change from "Movie" to watchlist and added views and serializers for the new model ```StreamPlatform```
+
+# Django Models Relationships
+
+It is important to know the most basic relationships we can establish between Django models. 
+
+- One to One RelationShip
+- One to Many
+- Many to Many
+
+<a href="https://docs.djangoproject.com/en/3.1/topics/db/examples/">Click here to check Django documentation</a>
