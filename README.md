@@ -858,3 +858,11 @@ When using SlugRelatedField as a read-write field, you will normally want to ens
 - queryset - The queryset used for model instance lookups when validating the field input. Relationships must either set a queryset explicitly, or set read_only=True.
 - many - If applied to a to-many relationship, you should set this argument to True.
 - allow_null - If set to True, the field will accept values of None or the empty string for nullable relationships. Defaults to False.
+
+# Generic Views
+
+Documentation description :
+
+> The generic views provided by REST framework allow you to quickly build API views that map closely to your database models.
+
+> If the generic views don't suit the needs of your API, you can drop down to using the regular APIView class, or reuse the mixins and base classes used by the generic views to compose your own set of reusable generic views.
