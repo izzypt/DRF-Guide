@@ -637,3 +637,309 @@ class WatchList(models.Model):
 ```
 
 I have also refactored the code to change from "Movie" to watchlist and added views and serializers for the new model ```StreamPlatform```
+
+# Django Models Relationships
+
+It is important to know the most basic relationships we can establish between Django models. 
+
+- One to One RelationShip
+- One to Many
+- Many to Many
+
+<a href="https://docs.djangoproject.com/en/3.1/topics/db/examples/">Click here to check Django documentation</a>
+
+Let's also add a relationship to our current ```WatchList``` model :
+
+```
+
+class WatchList(models.Model):
+    (...)
+    platform = models.ForeignKey(StreamPlatorm, on_delete=models.CASCADE, related_name="watchlist")
+    (...)
+        
+```
+
+Above we create a ```many-to-one``` relationship between WatchList and StreamPlatform, which means that each WatchList instance can be associated with only one StreamPlatform instance, but each StreamPlatform instance can be associated with many WatchList instances.
+
+Now an explanation on what each parameter of the field means:
+
+- ```StreamPlatform```: This is the model that the platform field is referring to.
+
+- ```on_delete=models.CASCADE```: This parameter specifies what should happen to the WatchList instances if the StreamPlatform instance they are associated with is deleted. In this case, CASCADE means that if a StreamPlatform instance is deleted, all WatchList instances associated with it will also be deleted.
+
+- ```related_name="watchlist"```: This parameter specifies the name of the reverse relation from StreamPlatform to WatchList. This means that each StreamPlatform instance will have a reverse relation to all associated WatchList instances, and the name of this relation will be "watchlist".
+
+>Each WatchList instance represents a single movie or TV show, and each WatchList instance is associated with one StreamPlatform instance that represents the platform where that movie or TV show can be streamed. Multiple WatchList instances can be associated with the same StreamPlatform instance, because multiple movies or TV shows can be available on the same streaming platform.
+
+# Nested Serializers
+
+Our goal for this section is to have a field in our serializers  ```StreamPlatformSerializer``` which displays all of the linked ```watchlist```'s for that platform.
+
+We will do this by adding the following line to our ```StreamPlatformSerializer```:
+```
+class StreamPlatformSerializer(serializers.ModelSerializer):
+    watchlist = WatchListSerializer(many=True, read_only=True)
+    
+    class Meta:
+        model = StreamPlatorm
+        fields = "__all__"
+```
+
+> Important note to keep is that the field name matches the ```related_name``` we defined in the ```WatchList``` model, because we are doing a reverse relation from StreamPlatform to WatchList.
+
+In the current start, our ```watchlist``` field returns the entire watchlist object, just like it would return a normal a watchlist instance from the ```WatchListSerializer```. But what if we want to customize that return of ```watchlist``` ?
+
+Well, instead of using ```WatchListSerializer``` as a return to our watchlist, we can use Relational fields, which I will discuss in the next section...
+
+# Serializer Relations
+
+<i>Documentation official description:</i>
+
+> Relational fields are used to represent model relationships. They can be applied to ForeignKey, ManyToManyField and OneToOneField relationships, as well as to reverse relationships, and custom relationships such as GenericForeignKey.
+
+### <ins>Inspecting Relationships</ins>
+
+When using the ModelSerializer class, serializer fields and relationships will be automatically generated for you. Inspecting these automatically generated fields can be a useful tool for determining how to customize the relationship style.
+
+To do so, open the Django shell, using python manage.py shell, then import the serializer class, instantiate it, and print the object representation…
+
+```
+>>> from myapp.serializers import AccountSerializer
+>>> serializer = AccountSerializer()
+>>> print(repr(serializer))
+AccountSerializer():
+    id = IntegerField(label='ID', read_only=True)
+    name = CharField(allow_blank=True, max_length=100, required=False)
+    owner = PrimaryKeyRelatedField(queryset=User.objects.all())
+```
+### <ins>Example Models</ins>
+  Let's take the models and examples from the official docs :
+
+```
+class Album(models.Model):
+    album_name = models.CharField(max_length=100)
+    artist = models.CharField(max_length=100)
+
+class Track(models.Model):
+    album = models.ForeignKey(Album, related_name='tracks', on_delete=models.CASCADE)
+    order = models.IntegerField()
+    title = models.CharField(max_length=100)
+    duration = models.IntegerField()
+
+    class Meta:
+        unique_together = ['album', 'order']
+        ordering = ['order']
+        
+    def __str__(self):
+        return '%d: %s' % (self.order, self.title)
+```
+
+The ```unique_together``` field in Django's Meta class specifies that certain fields in a model should be unique together, meaning that the combination of values for those fields must be unique in the database.
+
+Additionally, the ordering field in the Meta class specifies the default ordering for the Track model. In this case, it is set to order the tracks by their order field.
+
+### <ins>StringRelatedField</ins>
+
+> ```StringRelatedField``` may be used to represent the target of the relationship using its __str__ method.
+
+For example, the following serializer:
+
+```
+class AlbumSerializer(serializers.ModelSerializer):
+    tracks = serializers.StringRelatedField(many=True)
+
+    class Meta:
+        model = Album
+        fields = ['album_name', 'artist', 'tracks']
+```
+
+Would serialize to the following representation:
+
+```
+{
+    'album_name': 'Things We Lost In The Fire',
+    'artist': 'Low',
+    'tracks': [
+        '1: Sunflower',
+        '2: Whitetail',
+        '3: Dinosaur Act',
+        ...
+    ]
+}
+```
+
+This field is read only.
+
+<b>Arguments</b>:
+
+- many - If applied to a to-many relationship, you should set this argument to True.
+
+### <ins>PrimaryKeyRelatedField</ins>
+
+> ```PrimaryKeyRelatedField``` may be used to represent the target of the relationship using its primary key.
+
+For example, the following serializer:
+
+```
+class AlbumSerializer(serializers.ModelSerializer):
+    tracks = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
+
+    class Meta:
+        model = Album
+        fields = ['album_name', 'artist', 'tracks']
+```
+
+Would serialize to a representation like this:
+
+```
+{
+    'album_name': 'Undun',
+    'artist': 'The Roots',
+    'tracks': [
+        89,
+        90,
+        91,
+        ...
+    ]
+}
+```
+
+By default this field is read-write, although you can change this behavior using the read_only flag.
+
+<b>Arguments</b>:
+
+- queryset - The queryset used for model instance lookups when validating the field input. Relationships must either set a queryset explicitly, or set read_only=True.
+- many - If applied to a to-many relationship, you should set this argument to True.
+- allow_null - If set to True, the field will accept values of None or the empty string for nullable relationships. Defaults to False.
+- pk_field - Set to a field to control serialization/deserialization of the primary key's value. For example, pk_field=UUIDField(format='hex') would serialize a UUID primary key into its compact hex representation.
+
+
+### <ins>SlugRelatedField</ins>
+
+> ```SlugRelatedField``` may be used to represent the target of the relationship using a field on the target.
+
+For example, the following serializer:
+
+```
+class AlbumSerializer(serializers.ModelSerializer):
+    tracks = serializers.SlugRelatedField(
+        many=True,
+        read_only=True,
+        slug_field='title'
+     )
+
+    class Meta:
+        model = Album
+        fields = ['album_name', 'artist', 'tracks']
+```
+
+Would serialize to a representation like this:
+
+```
+{
+    'album_name': 'Dear John',
+    'artist': 'Loney Dear',
+    'tracks': [
+        'Airport Surroundings',
+        'Everything Turns to You',
+        'I Was Only Going Out',
+        ...
+    ]
+}
+```
+
+By default this field is read-write, although you can change this behavior using the read_only flag.
+
+When using SlugRelatedField as a read-write field, you will normally want to ensure that the slug field corresponds to a model field with unique=True.
+
+<b>Arguments</b>:
+
+- slug_field - The field on the target that should be used to represent it. This should be a field that uniquely identifies any given instance. For example, username. required
+- queryset - The queryset used for model instance lookups when validating the field input. Relationships must either set a queryset explicitly, or set read_only=True.
+- many - If applied to a to-many relationship, you should set this argument to True.
+- allow_null - If set to True, the field will accept values of None or the empty string for nullable relationships. Defaults to False.
+
+# Generic Views - <a href="https://www.django-rest-framework.org/api-guide/generic-views/#genericapiview">docs</a>
+
+Documentation description :
+
+> The generic views provided by REST framework allow you to quickly build API views that map closely to your database models.
+
+> If the generic views don't suit the needs of your API, you can drop down to using the regular APIView class, or reuse the mixins and base classes used by the generic views to compose your own set of reusable generic views.
+
+### <ins>GenericAPIView</ins>
+
+This class extends REST framework's APIView class, adding commonly required behavior for standard list and detail views.
+
+Each of the concrete generic views provided is built by combining GenericAPIView, with one or more mixin classes.
+
+
+### Attributes
+
+Basic settings:
+
+- ```queryset```
+- ```serializer_class``` 
+- ```lookup_field```
+- ```lookup_url_kwarg```
+
+Pagination:
+
+- ```pagination_class``` : The pagination class that should be used when paginating list results. Defaults to the same value as the DEFAULT_PAGINATION_CLASS setting, which is 'rest_framework.pagination.PageNumberPagination'. Setting pagination_class=None will disable pagination on this view. 
+
+Filtering:
+
+- ```filter_backends``` : A list of filter backend classes that should be used for filtering the queryset. Defaults to the same value as the DEFAULT_FILTER_BACKENDS setting.
+
+### Methods 
+
+- ```get_queryset(self)```
+
+> Returns the queryset that should be used for list views, and that should be used as the base for lookups in detail views. Defaults to returning the queryset specified by the queryset attribute. 
+
+This method should always be used rather than accessing self.queryset directly, as self.queryset gets evaluated only once, and those results are cached for all subsequent requests.
+
+For example:
+
+```
+def get_queryset(self):
+    user = self.request.user
+    return user.accounts.all()
+```
+- ```get_object(self)```
+
+> Returns an object instance that should be used for detail views. Defaults to using the lookup_field parameter to filter the base queryset.
+
+May be overridden to provide more complex behavior, such as object lookups based on more than one URL kwarg.
+
+For example:
+
+```
+def get_object(self):
+    queryset = self.get_queryset()
+    filter = {}
+    for field in self.multiple_lookup_fields:
+        filter[field] = self.kwargs[field]
+
+    obj = get_object_or_404(queryset, **filter)
+    self.check_object_permissions(self.request, obj)
+    return obj
+```
+
+# The N+1 Problem in the context of Django and DRF
+
+>The N+1 Problem is a common performance issue that arises when using an ORM (Object-Relational Mapping) tool like Django's ORM. It occurs when you make N database queries to fetch N objects, where each query fetches data for a single object. This can lead to a significant increase in the number of queries executed by your application and can slow down its performance.
+
+ - The N+1 Problem often arises when serializing data that involves relationships between models. 
+   - For example, let's say you have two models in your Django application, "Author" and "Book", with a one-to-many relationship between them. If you want to serialize a list of books with their associated authors, you might end up with an N+1 Problem if you use a serializer that queries the author for each book in the list. This is because the serializer would have to execute one query to fetch the list of books, and then N additional queries to fetch the associated authors.
+
+- To avoid the N+1 Problem in this scenario, you can use the ```select_related``` and ```prefetch_related``` methods in your queryset to tell Django to fetch the related objects in a more efficient way. 
+  - ```select_related``` is used to fetch data from a related model in a single query, while ```prefetch_related``` is used to fetch data from a related model in a separate query and cache the results. By using these methods, you can reduce the number of queries executed by your application and improve its performance.
+
+# Identifying the N+1 Problem
+
+- One way is to use Django Debug Toolbar :
+  - It's a third-party package that provides a set of panels displaying various debug information about the current request/response cycle, including the number of database queries executed and the time spent on each query. The SQL panel in the toolbar is especially useful for identifying N+1 problems, as it shows the SQL queries executed by Django's ORM and can help you pinpoint which queries are causing performance issues.
+
+- Another way is to use the ```django.db.connection.queries``` attribute :
+  - This attribute is a list of all the SQL queries executed during the request/response cycle, and you can print it out in your view or middleware to see the queries being executed. By inspecting this list, you can look for patterns that indicate an N+1 problem, such as multiple queries being executed for the same model or related model.
