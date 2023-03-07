@@ -1001,15 +1001,29 @@ def get_object(self):
 
 > The mixin classes provide the actions that are used to provide the basic view behavior. Note that the mixin classes provide action methods rather than defining the handler methods, such as .get() and .post(), directly. This allows for more flexible composition of behavior.
 
-The mixin classes can be imported from ```rest_framework.mixins```.
+The mixin classes can be imported from ```rest_framework.mixins```. Each mixin provides a method/action that implements some type of common functionality.
 
 Mixins list :
 
 - ListModelMixin
+ > Provides a ```.create(request, *args, **kwargs)``` method, that implements creating and saving a new model instance.
+                                                                                          
 - CreateModelMixin
+ > Provides a ```.list(request, *args, **kwargs)``` method, that implements listing a queryset.                                                                                        
 - RetrieveModelMixin
+ > Provides a ```.retrieve(request, *args, **kwargs)``` method, that implements returning an existing model instance in a response.
+                                                                                          
 - UpdateModelMixin
+> Provides a ```.update(request, *args, **kwargs)``` method, that implements updating and saving an existing model instance.
+                                                                                          
 - DestroyModelMixin
+> Provides a ```destroy(request, *args, **kwargs)``` method, that implements deletion of an existing model instance.                                                                                          
+ These mixins are designed to be used together with generics.GenericAPIView to provide common functionality that you can use across multiple views. By combining these mixins with GenericAPIView and your own custom code, you can create powerful and flexible class-based views in DRF.
+                                                                                          
+# Applying Generics and Mixins to our project
+
+Taking into account the previous topics, let's write 2 class that utilize the ```generics.GenericAPIView``` and some mixins.
+                                                                        
 
 # Concrete View Classes - <a href="https://www.django-rest-framework.org/api-guide/generic-views/#concrete-view-classes">Docs</a>
 
