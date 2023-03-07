@@ -859,7 +859,7 @@ When using SlugRelatedField as a read-write field, you will normally want to ens
 - many - If applied to a to-many relationship, you should set this argument to True.
 - allow_null - If set to True, the field will accept values of None or the empty string for nullable relationships. Defaults to False.
 
-# Generic Views
+# Generic Views - <a href="https://www.django-rest-framework.org/api-guide/generic-views/#genericapiview">docs</a>
 
 Documentation description :
 
