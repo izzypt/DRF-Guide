@@ -859,6 +859,50 @@ When using SlugRelatedField as a read-write field, you will normally want to ens
 - many - If applied to a to-many relationship, you should set this argument to True.
 - allow_null - If set to True, the field will accept values of None or the empty string for nullable relationships. Defaults to False.
 
+### <ins> Custom relational fields </ins>
+
+- To implement a custom relational field, you should override RelatedField, and implement the ```.to_representation(self, value)``` method. 
+  - This method takes the target of the field as the value argument, and should return the representation that should be used to serialize the target. The value argument will typically be a model instance.
+  
+- If you want to implement a read-write relational field, you must also implement the ```.to_internal_value(self, data)``` method.
+
+To provide a dynamic queryset based on the context, you can also override ```.get_queryset(self)``` instead of specifying .queryset on the class or when initializing the field.
+
+For example:
+
+We could define a relational field to serialize a track to a custom string representation, using its ordering, title, and duration:
+
+```
+import time
+
+class TrackListingField(serializers.RelatedField):
+    def to_representation(self, value):
+        duration = time.strftime('%M:%S', time.gmtime(value.duration))
+        return 'Track %d: %s (%s)' % (value.order, value.name, duration)
+
+class AlbumSerializer(serializers.ModelSerializer):
+    tracks = TrackListingField(many=True)
+
+    class Meta:
+        model = Album
+        fields = ['album_name', 'artist', 'tracks']
+```
+
+This custom field would then serialize to the following representation:
+
+```
+{
+    'album_name': 'Sometimes I Wish We Were an Eagle',
+    'artist': 'Bill Callahan',
+    'tracks': [
+        'Track 1: Jim Cain (04:39)',
+        'Track 2: Eid Ma Clack Shaw (04:19)',
+        'Track 3: The Wind and the Dove (04:34)',
+        ...
+    ]
+}
+```
+
 # The N+1 Problem in the context of Django and DRF
 
 >The N+1 Problem is a common performance issue that arises when using an ORM (Object-Relational Mapping) tool like Django's ORM. It occurs when you make N database queries to fetch N objects, where each query fetches data for a single object. This can lead to a significant increase in the number of queries executed by your application and can slow down its performance.
