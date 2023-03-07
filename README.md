@@ -859,7 +859,25 @@ When using SlugRelatedField as a read-write field, you will normally want to ens
 - many - If applied to a to-many relationship, you should set this argument to True.
 - allow_null - If set to True, the field will accept values of None or the empty string for nullable relationships. Defaults to False.
 
-# Generic Views - <a href="https://www.django-rest-framework.org/api-guide/generic-views/#genericapiview">docs</a>
+# The N+1 Problem in the context of Django and DRF
+
+>The N+1 Problem is a common performance issue that arises when using an ORM (Object-Relational Mapping) tool like Django's ORM. It occurs when you make N database queries to fetch N objects, where each query fetches data for a single object. This can lead to a significant increase in the number of queries executed by your application and can slow down its performance.
+
+ - The N+1 Problem often arises when serializing data that involves relationships between models. 
+   - For example, let's say you have two models in your Django application, "Author" and "Book", with a one-to-many relationship between them. If you want to serialize a list of books with their associated authors, you might end up with an N+1 Problem if you use a serializer that queries the author for each book in the list. This is because the serializer would have to execute one query to fetch the list of books, and then N additional queries to fetch the associated authors.
+
+- To avoid the N+1 Problem in this scenario, you can use the ```select_related``` and ```prefetch_related``` methods in your queryset to tell Django to fetch the related objects in a more efficient way. 
+  - ```select_related``` is used to fetch data from a related model in a single query, while ```prefetch_related``` is used to fetch data from a related model in a separate query and cache the results. By using these methods, you can reduce the number of queries executed by your application and improve its performance.
+
+# Identifying the N+1 Problem
+
+- One way is to use Django Debug Toolbar :
+  - It's a third-party package that provides a set of panels displaying various debug information about the current request/response cycle, including the number of database queries executed and the time spent on each query. The SQL panel in the toolbar is especially useful for identifying N+1 problems, as it shows the SQL queries executed by Django's ORM and can help you pinpoint which queries are causing performance issues.
+
+- Another way is to use the ```django.db.connection.queries``` attribute :
+  - This attribute is a list of all the SQL queries executed during the request/response cycle, and you can print it out in your view or middleware to see the queries being executed. By inspecting this list, you can look for patterns that indicate an N+1 problem, such as multiple queries being executed for the same model or related model.
+
+# Generic Views - <a href="https://www.django-rest-framework.org/api-guide/generic-views/#genericapiview">Docs</a>
 
 Documentation description :
 
@@ -926,20 +944,33 @@ def get_object(self):
     return obj
 ```
 
-# The N+1 Problem in the context of Django and DRF
 
->The N+1 Problem is a common performance issue that arises when using an ORM (Object-Relational Mapping) tool like Django's ORM. It occurs when you make N database queries to fetch N objects, where each query fetches data for a single object. This can lead to a significant increase in the number of queries executed by your application and can slow down its performance.
+# Mixins - <a href="https://www.django-rest-framework.org/api-guide/generic-views/#mixins">Docs</a>
 
- - The N+1 Problem often arises when serializing data that involves relationships between models. 
-   - For example, let's say you have two models in your Django application, "Author" and "Book", with a one-to-many relationship between them. If you want to serialize a list of books with their associated authors, you might end up with an N+1 Problem if you use a serializer that queries the author for each book in the list. This is because the serializer would have to execute one query to fetch the list of books, and then N additional queries to fetch the associated authors.
+> The mixin classes provide the actions that are used to provide the basic view behavior. Note that the mixin classes provide action methods rather than defining the handler methods, such as .get() and .post(), directly. This allows for more flexible composition of behavior.
 
-- To avoid the N+1 Problem in this scenario, you can use the ```select_related``` and ```prefetch_related``` methods in your queryset to tell Django to fetch the related objects in a more efficient way. 
-  - ```select_related``` is used to fetch data from a related model in a single query, while ```prefetch_related``` is used to fetch data from a related model in a separate query and cache the results. By using these methods, you can reduce the number of queries executed by your application and improve its performance.
+The mixin classes can be imported from ```rest_framework.mixins```.
 
-# Identifying the N+1 Problem
+Mixins list :
 
-- One way is to use Django Debug Toolbar :
-  - It's a third-party package that provides a set of panels displaying various debug information about the current request/response cycle, including the number of database queries executed and the time spent on each query. The SQL panel in the toolbar is especially useful for identifying N+1 problems, as it shows the SQL queries executed by Django's ORM and can help you pinpoint which queries are causing performance issues.
+- ListModelMixin
+- CreateModelMixin
+- RetrieveModelMixin
+- UpdateModelMixin
+- DestroyModelMixin
 
-- Another way is to use the ```django.db.connection.queries``` attribute :
-  - This attribute is a list of all the SQL queries executed during the request/response cycle, and you can print it out in your view or middleware to see the queries being executed. By inspecting this list, you can look for patterns that indicate an N+1 problem, such as multiple queries being executed for the same model or related model.
+# Concrete View Classes - <a href="https://www.django-rest-framework.org/api-guide/generic-views/#concrete-view-classes">Docs</a>
+
+>The following classes are the concrete generic views. If you're using generic views this is normally the level you'll be working at unless you need heavily customized behavior.
+
+The view classes can be imported from ```rest_framework.generics```.
+
+- CreateAPIView -> Used for create-only endpoints.
+- ListAPIView -> Used for read-only endpoints to represent a collection of model instances.
+- RetrieveAPIView -> Used for read-only endpoints to represent a single model instance.
+- DestroyAPIView -> Used for delete-only endpoints for a single model instance.
+- UpdateAPIView -> Used for update-only endpoints for a single model instance.
+- ListCreateAPIView -> Used for read-write endpoints to represent a collection of model instances.
+- RetrieveUpdateAPIView -> Used for read or update endpoints to represent a single model instance.
+- RetrieveDestroyAPIView -> Used for read or delete endpoints to represent a single model instance.
+- RetrieveUpdateDestroyAPIView -> Used for read-write-delete endpoints to represent a single model instance.
