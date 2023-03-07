@@ -869,7 +869,7 @@ Documentation description :
 
 ### <ins>GenericAPIView</ins>
 
-> This class extends REST framework's APIView class, adding commonly required behavior for standard list and detail views.
+This class extends REST framework's APIView class, adding commonly required behavior for standard list and detail views.
 
 Each of the concrete generic views provided is built by combining GenericAPIView, with one or more mixin classes.
 
@@ -890,3 +890,56 @@ Pagination:
 Filtering:
 
 - ```filter_backends``` : A list of filter backend classes that should be used for filtering the queryset. Defaults to the same value as the DEFAULT_FILTER_BACKENDS setting.
+
+### Methods 
+
+- ```get_queryset(self)```
+
+> Returns the queryset that should be used for list views, and that should be used as the base for lookups in detail views. Defaults to returning the queryset specified by the queryset attribute. 
+
+This method should always be used rather than accessing self.queryset directly, as self.queryset gets evaluated only once, and those results are cached for all subsequent requests.
+
+For example:
+
+```
+def get_queryset(self):
+    user = self.request.user
+    return user.accounts.all()
+```
+- ```get_object(self)```
+
+> Returns an object instance that should be used for detail views. Defaults to using the lookup_field parameter to filter the base queryset.
+
+May be overridden to provide more complex behavior, such as object lookups based on more than one URL kwarg.
+
+For example:
+
+```
+def get_object(self):
+    queryset = self.get_queryset()
+    filter = {}
+    for field in self.multiple_lookup_fields:
+        filter[field] = self.kwargs[field]
+
+    obj = get_object_or_404(queryset, **filter)
+    self.check_object_permissions(self.request, obj)
+    return obj
+```
+
+# The N+1 Problem in the context of Django and DRF
+
+>The N+1 Problem is a common performance issue that arises when using an ORM (Object-Relational Mapping) tool like Django's ORM. It occurs when you make N database queries to fetch N objects, where each query fetches data for a single object. This can lead to a significant increase in the number of queries executed by your application and can slow down its performance.
+
+ - The N+1 Problem often arises when serializing data that involves relationships between models. 
+   - For example, let's say you have two models in your Django application, "Author" and "Book", with a one-to-many relationship between them. If you want to serialize a list of books with their associated authors, you might end up with an N+1 Problem if you use a serializer that queries the author for each book in the list. This is because the serializer would have to execute one query to fetch the list of books, and then N additional queries to fetch the associated authors.
+
+- To avoid the N+1 Problem in this scenario, you can use the ```select_related``` and ```prefetch_related``` methods in your queryset to tell Django to fetch the related objects in a more efficient way. 
+  - ```select_related``` is used to fetch data from a related model in a single query, while ```prefetch_related``` is used to fetch data from a related model in a separate query and cache the results. By using these methods, you can reduce the number of queries executed by your application and improve its performance.
+
+# Identifying the N+1 Problem
+
+- One way is to use Django Debug Toolbar :
+  - It's a third-party package that provides a set of panels displaying various debug information about the current request/response cycle, including the number of database queries executed and the time spent on each query. The SQL panel in the toolbar is especially useful for identifying N+1 problems, as it shows the SQL queries executed by Django's ORM and can help you pinpoint which queries are causing performance issues.
+
+- Another way is to use the ```django.db.connection.queries``` attribute :
+  - This attribute is a list of all the SQL queries executed during the request/response cycle, and you can print it out in your view or middleware to see the queries being executed. By inspecting this list, you can look for patterns that indicate an N+1 problem, such as multiple queries being executed for the same model or related model.
