@@ -866,3 +866,27 @@ Documentation description :
 > The generic views provided by REST framework allow you to quickly build API views that map closely to your database models.
 
 > If the generic views don't suit the needs of your API, you can drop down to using the regular APIView class, or reuse the mixins and base classes used by the generic views to compose your own set of reusable generic views.
+
+### <ins>GenericAPIView</ins>
+
+> This class extends REST framework's APIView class, adding commonly required behavior for standard list and detail views.
+
+Each of the concrete generic views provided is built by combining GenericAPIView, with one or more mixin classes.
+
+
+### Attributes
+
+Basic settings:
+
+- ```queryset```
+- ```serializer_class``` 
+- ```lookup_field```
+- ```lookup_url_kwarg```
+
+Pagination:
+
+- ```pagination_class``` : The pagination class that should be used when paginating list results. Defaults to the same value as the DEFAULT_PAGINATION_CLASS setting, which is 'rest_framework.pagination.PageNumberPagination'. Setting pagination_class=None will disable pagination on this view. 
+
+Filtering:
+
+- ```filter_backends``` : A list of filter backend classes that should be used for filtering the queryset. Defaults to the same value as the DEFAULT_FILTER_BACKENDS setting.
