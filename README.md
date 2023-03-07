@@ -38,10 +38,17 @@ This repo will cover the following topics and concepts about Django and , specif
   - Cursor
 - Automated API Testing
 
+# Index By Topic
+
+- [Installation](#install) 
+- [DRF Imtroduction](#drf_intro)
+- [Creating JSON Response with vanilla Django](#response_vanilla_django)
+
 # What we will build ?
 
 In order to cover all those topics , we will build an API that will serve movie data , like an IMDB or WatchMate clone.
 
+<a id="install"></a>
 # Installation
 
 In order to use DRF , first we need to start a Django project. We can do it very simply, by following those steps:
@@ -88,6 +95,7 @@ admin.site.register(Movie)
 ```
 4) We are now able to add new movies from the admin panel.
 
+<a id="response_vanilla_django
 # Creating JSON Response with vanilla Django.
 
 In order to understand why DRF is so usefull , let's first start by serving our movie data with the built-in logic that Django provides. Later , we can see how DRF will build and improve on that-
@@ -130,7 +138,7 @@ def movie_detail(request, movie_id):
 ```
 
 So, as you can see, most of our work is to transform the queryset we receive from Django ORM to a JSON object that the user will receive ! What if there was an easier way to do this ? There is... that's why we will use DRF instead.
-
+<a id="drf_intro"></a>
 # DRF Introduction
 
 Let's implement DRF into our project.
