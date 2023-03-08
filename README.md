@@ -939,9 +939,34 @@ Documentation description :
 
 ### <ins>GenericAPIView</ins>
 
+Base class for all other generic views.
+
 This class extends REST framework's APIView class, adding commonly required behavior for standard list and detail views.
 
 Each of the concrete generic views provided is built by combining GenericAPIView, with one or more mixin classes.
+
+```
+class GenericAPIView(views.APIView):
+ # You'll need to either set these attributes,
+    # or override `get_queryset()`/`get_serializer_class()`.
+    # If you are overriding a view method, it is important that you call
+    # `get_queryset()` instead of accessing the `queryset` property directly,
+    # as `queryset` will get evaluated only once, and those results are cached
+    # for all subsequent requests.
+    queryset = None
+    serializer_class = None
+
+    # If you want to use object lookups other than pk, set 'lookup_field'.
+    # For more complex lookup requirements override `get_object()`.
+    lookup_field = 'pk'
+    lookup_url_kwarg = None
+
+    # The filter backend classes to use for queryset filtering
+    filter_backends = api_settings.DEFAULT_FILTER_BACKENDS
+
+    # The style to use for queryset pagination.
+    pagination_class = api_settings.DEFAULT_PAGINATION_CLASS
+```
 
 
 ### Attributes
